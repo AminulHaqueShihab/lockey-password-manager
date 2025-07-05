@@ -3,7 +3,8 @@ import { ICredential } from '@/models/Credential';
 
 // Define the base query with error handling
 const baseQuery = fetchBaseQuery({
-	baseUrl: '/api',
+	baseUrl:
+		`${process.env.NEXT_PUBLIC_API_URL}/api` || 'http://localhost:3000/api',
 	prepareHeaders: headers => {
 		headers.set('Content-Type', 'application/json');
 		return headers;

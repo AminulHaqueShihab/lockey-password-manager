@@ -41,7 +41,7 @@ export default function VaultPage() {
 			const localConfigured = localStorage.getItem('masterPasswordHash');
 
 			if (!envConfigured && !localConfigured) {
-				setNeedsSetup(true);
+				setNeedsSetup(true); 
 			}
 		};
 
