@@ -78,10 +78,11 @@ export default function CredentialTable({
 					{credentials.map(credential => {
 						const serviceConfig = getServiceConfig(credential.serviceName);
 						const categoryColor = getCategoryColor(credential.category);
+						const credentialId = credential._id as string;
 
 						return (
 							<tr
-								key={credential._id as string}
+								key={credentialId}
 								className='border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50'
 							>
 								{/* Service */}
@@ -137,19 +138,17 @@ export default function CredentialTable({
 								<td className='p-2'>
 									<div className='flex items-center gap-1'>
 										<span className='text-sm font-mono'>
-											{showPassword === credential._id
+											{showPassword === credentialId
 												? credential.password
 												: '••••••••••••••••'}
 										</span>
 										<Button
 											variant='ghost'
 											size='sm'
-											onClick={() =>
-												togglePasswordVisibility(credential._id as string)
-											}
+											onClick={() => togglePasswordVisibility(credentialId)}
 											className='h-5 w-5 p-0'
 										>
-											{showPassword === credential._id ? (
+											{showPassword === credentialId ? (
 												<EyeOff className='h-3 w-3' />
 											) : (
 												<Eye className='h-3 w-3' />
@@ -182,10 +181,7 @@ export default function CredentialTable({
 											variant='ghost'
 											size='sm'
 											onClick={() =>
-												onTogglePin(
-													credential._id as string,
-													!credential.isPinned
-												)
+												onTogglePin(credentialId, !credential.isPinned)
 											}
 											className='h-6 w-6 p-0'
 											title={credential.isPinned ? 'Unpin' : 'Pin'}
@@ -199,7 +195,7 @@ export default function CredentialTable({
 										<Button
 											variant='ghost'
 											size='sm'
-											onClick={() => openDetails(credential._id as string)}
+											onClick={() => openDetails(credentialId)}
 											className='h-6 w-6 p-0'
 											title='Details'
 										>
@@ -214,17 +210,20 @@ export default function CredentialTable({
 			</table>
 
 			{/* Details Dialogs */}
-			{credentials.map(credential => (
-				<CredentialDetailsDialog
-					key={credential._id as string}
-					credential={credential}
-					open={showDetails === credential._id}
-					onOpenChange={open => setShowDetails(open ? credential._id : null)}
-					onEdit={onEdit}
-					onDelete={onDelete}
-					onTogglePin={onTogglePin}
-				/>
-			))}
+			{credentials.map(credential => {
+				const credentialId = credential._id as string;
+				return (
+					<CredentialDetailsDialog
+						key={credentialId}
+						credential={credential}
+						open={showDetails === credentialId}
+						onOpenChange={open => setShowDetails(open ? credentialId : null)}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onTogglePin={onTogglePin}
+					/>
+				);
+			})}
 		</div>
 	);
 }
