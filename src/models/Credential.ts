@@ -2,6 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 // Interface for the credential document
 export interface ICredential extends Document {
+	userId: mongoose.Types.ObjectId;
 	serviceName: string;
 	serviceUrl: string;
 	username: string;
@@ -18,6 +19,12 @@ export interface ICredential extends Document {
 // Schema definition
 const CredentialSchema = new Schema<ICredential>(
 	{
+		userId: {
+			type: Schema.Types.ObjectId,
+			ref: 'User',
+			required: [true, 'User ID is required'],
+			index: true,
+		},
 		serviceName: {
 			type: String,
 			required: [true, 'Service name is required'],
@@ -76,9 +83,11 @@ const CredentialSchema = new Schema<ICredential>(
 	}
 );
 
-// Index for better query performance
-CredentialSchema.index({ serviceName: 1, category: 1 });
-CredentialSchema.index({ isPinned: 1, createdAt: -1 });
+// Indexes for better query performance
+CredentialSchema.index({ userId: 1, serviceName: 1, category: 1 });
+CredentialSchema.index({ userId: 1, isPinned: 1, createdAt: -1 });
+CredentialSchema.index({ userId: 1, category: 1 });
+CredentialSchema.index({ userId: 1, createdAt: -1 });
 
 // Virtual for getting the decrypted password (not stored in DB)
 CredentialSchema.virtual('decryptedPassword').get(function () {

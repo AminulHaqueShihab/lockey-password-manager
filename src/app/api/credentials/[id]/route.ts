@@ -2,16 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Credential, { ICredential } from '@/models/Credential';
 import { decryptData, encryptData } from '@/lib/encryption';
+import { authenticateRequest, createAuthErrorResponse } from '@/lib/auth';
 
 /**
  * GET /api/credentials/[id]
- * Fetches a single credential by ID with decrypted sensitive data
+ * Fetches a single credential by ID with decrypted sensitive data (user-specific)
  */
 export async function GET(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
+		// Authenticate request
+		const userPayload = await authenticateRequest(request);
+		if (!userPayload) {
+			return createAuthErrorResponse('Authentication required', 401);
+		}
+
 		// Connect to MongoDB
 		await connectDB();
 
@@ -25,8 +32,11 @@ export async function GET(
 			);
 		}
 
-		// Find credential by ID
-		const credential = (await Credential.findById(id).lean()) as any;
+		// Find credential by ID and user ID
+		const credential = (await Credential.findOne({
+			_id: id,
+			userId: userPayload.userId,
+		}).lean()) as any;
 
 		if (!credential) {
 			return NextResponse.json(
@@ -60,13 +70,19 @@ export async function GET(
 
 /**
  * PUT /api/credentials/[id]
- * Updates a credential with encrypted sensitive data
+ * Updates a credential with encrypted sensitive data (user-specific)
  */
 export async function PUT(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
+		// Authenticate request
+		const userPayload = await authenticateRequest(request);
+		if (!userPayload) {
+			return createAuthErrorResponse('Authentication required', 401);
+		}
+
 		// Connect to MongoDB
 		await connectDB();
 
@@ -102,8 +118,11 @@ export async function PUT(
 			);
 		}
 
-		// Find existing credential
-		const existingCredential = (await Credential.findById(id)) as any;
+		// Find existing credential by ID and user ID
+		const existingCredential = (await Credential.findOne({
+			_id: id,
+			userId: userPayload.userId,
+		})) as any;
 
 		if (!existingCredential) {
 			return NextResponse.json(
@@ -159,13 +178,19 @@ export async function PUT(
 
 /**
  * DELETE /api/credentials/[id]
- * Deletes a credential by ID
+ * Deletes a credential by ID (user-specific)
  */
 export async function DELETE(
 	request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
+		// Authenticate request
+		const userPayload = await authenticateRequest(request);
+		if (!userPayload) {
+			return createAuthErrorResponse('Authentication required', 401);
+		}
+
 		// Connect to MongoDB
 		await connectDB();
 
@@ -179,8 +204,11 @@ export async function DELETE(
 			);
 		}
 
-		// Find and delete credential
-		const deletedCredential = (await Credential.findByIdAndDelete(id)) as any;
+		// Find and delete credential by ID and user ID
+		const deletedCredential = (await Credential.findOneAndDelete({
+			_id: id,
+			userId: userPayload.userId,
+		})) as any;
 
 		if (!deletedCredential) {
 			return NextResponse.json(

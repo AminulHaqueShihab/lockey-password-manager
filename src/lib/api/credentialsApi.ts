@@ -4,8 +4,25 @@ import { ICredential } from '@/models/Credential';
 // Define the base query with error handling
 const baseQuery = fetchBaseQuery({
 	baseUrl: '/api',
-	prepareHeaders: headers => {
+	prepareHeaders: (headers, { getState }) => {
 		headers.set('Content-Type', 'application/json');
+
+		// Add auth token if available (only on client side)
+		if (typeof window !== 'undefined') {
+			const token = localStorage.getItem('authToken');
+			if (token) {
+				headers.set('authorization', `Bearer ${token}`);
+				console.log(
+					'Adding auth token to request:',
+					token.substring(0, 20) + '...'
+				);
+			} else {
+				console.log('No auth token found in localStorage');
+			}
+		} else {
+			console.log('Running on server side, skipping token');
+		}
+
 		return headers;
 	},
 });

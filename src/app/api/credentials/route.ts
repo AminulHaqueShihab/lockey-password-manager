@@ -2,14 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Credential, { ICredential } from '@/models/Credential';
 import { decryptData, encryptData } from '@/lib/encryption';
+import { authenticateRequest, createAuthErrorResponse } from '@/lib/auth';
 
 /**
  * GET /api/credentials
- * Fetches all credentials with decrypted sensitive data
+ * Fetches all credentials for the authenticated user with decrypted sensitive data
  */
 export async function GET(request: NextRequest) {
 	try {
 		console.log('GET /api/credentials - Starting request');
+
+		// Authenticate request
+		const userPayload = await authenticateRequest(request);
+		if (!userPayload) {
+			return createAuthErrorResponse('Authentication required', 401);
+		}
 
 		// Connect to MongoDB
 		await connectDB();
@@ -22,8 +29,8 @@ export async function GET(request: NextRequest) {
 
 		console.log('GET /api/credentials - Query params:', { category, search });
 
-		// Build query
-		let query: any = {};
+		// Build query - always filter by user
+		let query: any = { userId: userPayload.userId };
 
 		if (category && category !== 'all') {
 			query.category = category;
@@ -81,10 +88,18 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/credentials
- * Creates a new credential with encrypted sensitive data
+ * Creates a new credential for the authenticated user with encrypted sensitive data
  */
 export async function POST(request: NextRequest) {
 	try {
+		console.log('POST /api/credentials - Starting creation');
+
+		// Authenticate request
+		const userPayload = await authenticateRequest(request);
+		if (!userPayload) {
+			return createAuthErrorResponse('Authentication required', 401);
+		}
+
 		// Connect to MongoDB
 		await connectDB();
 
@@ -116,8 +131,9 @@ export async function POST(request: NextRequest) {
 			? encryptData(twoFactorSecret)
 			: undefined;
 
-		// Create new credential
+		// Create new credential with user ID
 		const newCredential = new Credential({
+			userId: userPayload.userId,
 			serviceName,
 			serviceUrl,
 			username,
@@ -132,9 +148,12 @@ export async function POST(request: NextRequest) {
 		// Save to database
 		const savedCredential = await newCredential.save();
 
+		console.log('POST /api/credentials - Credential created successfully');
+
 		// Return decrypted data for response
 		const responseData = {
 			...savedCredential.toObject(),
+			_id: savedCredential._id as string,
 			password: password, // Return original password for confirmation
 			twoFactorSecret: twoFactorSecret || undefined,
 		};
