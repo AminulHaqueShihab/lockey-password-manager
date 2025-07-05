@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import CredentialCard from './CredentialCard';
+import CredentialTable from './CredentialTable';
 import AddCredentialForm from './AddCredentialForm';
 import { ICredential } from '@/models/Credential';
 import { getCategories, getCategoryColor } from '@/lib/services';
@@ -24,10 +25,33 @@ export default function CredentialList({
 }: CredentialListProps) {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedCategory, setSelectedCategory] = useState('all');
-	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+	const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [editingCredential, setEditingCredential] =
 		useState<ICredential | null>(null);
+
+	// Load view mode from localStorage on component mount
+	useEffect(() => {
+		if (typeof window !== 'undefined') {
+			const savedViewMode = localStorage.getItem('credentialViewMode') as
+				| 'grid'
+				| 'list';
+			if (
+				savedViewMode &&
+				(savedViewMode === 'grid' || savedViewMode === 'list')
+			) {
+				setViewMode(savedViewMode);
+			}
+		}
+	}, []);
+
+	// Save view mode to localStorage when it changes
+	const handleViewModeChange = (mode: 'grid' | 'list') => {
+		setViewMode(mode);
+		if (typeof window !== 'undefined') {
+			localStorage.setItem('credentialViewMode', mode);
+		}
+	};
 
 	// Custom hook for credential operations
 	const {
@@ -133,7 +157,7 @@ export default function CredentialList({
 						<Button
 							variant={viewMode === 'grid' ? 'default' : 'ghost'}
 							size='sm'
-							onClick={() => setViewMode('grid')}
+							onClick={() => handleViewModeChange('grid')}
 							className='rounded-r-none'
 						>
 							<Grid className='h-4 w-4' />
@@ -141,7 +165,7 @@ export default function CredentialList({
 						<Button
 							variant={viewMode === 'list' ? 'default' : 'ghost'}
 							size='sm'
-							onClick={() => setViewMode('list')}
+							onClick={() => handleViewModeChange('list')}
 							className='rounded-l-none'
 						>
 							<List className='h-4 w-4' />
@@ -219,14 +243,8 @@ export default function CredentialList({
 						)}
 					</div>
 				</div>
-			) : (
-				<div
-					className={
-						viewMode === 'grid'
-							? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-							: 'space-y-4'
-					}
-				>
+			) : viewMode === 'grid' ? (
+				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
 					{filteredCredentials.map(credential => (
 						<CredentialCard
 							key={credential._id as string}
@@ -237,6 +255,13 @@ export default function CredentialList({
 						/>
 					))}
 				</div>
+			) : (
+				<CredentialTable
+					credentials={filteredCredentials}
+					onEdit={handleEdit}
+					onDelete={handleDeleteCredential}
+					onTogglePin={handleTogglePin}
+				/>
 			)}
 
 			{/* Add/Edit Form */}

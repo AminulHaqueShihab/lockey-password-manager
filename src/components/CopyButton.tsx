@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -17,12 +16,10 @@ interface CopyButtonProps {
 		| 'link';
 	size?: 'default' | 'sm' | 'lg' | 'icon';
 	className?: string;
-	autoClearTimeout?: number;
 }
 
 /**
- * CopyButton component with auto-clear functionality
- * Copies text to clipboard and shows success feedback
+ * CopyButton component that copies text to clipboard and shows toast notification
  */
 export default function CopyButton({
 	text,
@@ -30,10 +27,7 @@ export default function CopyButton({
 	variant = 'outline',
 	size = 'sm',
 	className = '',
-	autoClearTimeout = 3000,
 }: CopyButtonProps) {
-	const [copied, setCopied] = useState(false);
-
 	const handleCopy = async () => {
 		try {
 			// Check if clipboard API is available
@@ -53,15 +47,8 @@ export default function CopyButton({
 				document.body.removeChild(textArea);
 			}
 
-			setCopied(true);
-
 			// Show success toast
 			toast.success(`${label} copied to clipboard!`);
-
-			// Auto-clear after timeout
-			setTimeout(() => {
-				setCopied(false);
-			}, autoClearTimeout);
 		} catch (error) {
 			console.error('Failed to copy text:', error);
 			toast.error('Failed to copy to clipboard');
@@ -74,19 +61,9 @@ export default function CopyButton({
 			size={size}
 			onClick={handleCopy}
 			className={`transition-all duration-200 ${className}`}
-			disabled={copied}
 		>
-			{copied ? (
-				<>
-					<Check className='h-4 w-4 mr-2' />
-					Copied!
-				</>
-			) : (
-				<>
-					<Copy className='h-4 w-4 mr-2' />
-					{label}
-				</>
-			)}
+			<Copy className='h-4 w-4 mr-2' />
+			{label}
 		</Button>
 	);
 }
