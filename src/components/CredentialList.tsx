@@ -70,7 +70,7 @@ export default function CredentialList({
 		if (!editingCredential) return;
 
 		const success = await updateCredential(
-			editingCredential._id,
+			editingCredential._id as string,
 			credentialData
 		);
 		if (success) {
@@ -229,7 +229,7 @@ export default function CredentialList({
 				>
 					{filteredCredentials.map(credential => (
 						<CredentialCard
-							key={credential._id}
+							key={credential._id as string}
 							credential={credential}
 							onEdit={handleEdit}
 							onDelete={handleDeleteCredential}

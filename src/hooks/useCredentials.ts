@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 import {
 	useGetCredentialsQuery,
+	useGetCredentialQuery,
 	useCreateCredentialMutation,
 	useUpdateCredentialMutation,
 	useDeleteCredentialMutation,
@@ -140,7 +141,7 @@ export const useCredential = (id: string) => {
 		}
 
 		try {
-			await deleteCredential(credential._id).unwrap();
+			await deleteCredential(credential._id as string).unwrap();
 			toast.success('Credential deleted successfully!');
 			return true;
 		} catch (error) {

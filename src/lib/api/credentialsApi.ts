@@ -37,7 +37,7 @@ export const credentialsApi = createApi({
 					? [
 							...result.data.map(({ _id }) => ({
 								type: 'Credential' as const,
-								id: _id,
+								id: _id as string,
 							})),
 							{ type: 'Credential', id: 'LIST' },
 					  ]

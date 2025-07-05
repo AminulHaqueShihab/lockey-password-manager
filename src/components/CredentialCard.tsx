@@ -79,7 +79,9 @@ export default function CredentialCard({
 					<Button
 						variant='ghost'
 						size='sm'
-						onClick={() => onTogglePin(credential._id, !credential.isPinned)}
+						onClick={() =>
+							onTogglePin(credential._id as string, !credential.isPinned)
+						}
 						className='text-white hover:bg-white/20'
 					>
 						{credential.isPinned ? (
@@ -243,7 +245,7 @@ export default function CredentialCard({
 						<Button
 							variant='outline'
 							size='sm'
-							onClick={() => onDelete(credential._id)}
+							onClick={() => onDelete(credential._id as string)}
 							className='text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20'
 						>
 							<Trash2 className='h-4 w-4 mr-1' />

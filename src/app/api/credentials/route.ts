@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Credential from '@/models/Credential';
+import Credential, { ICredential } from '@/models/Credential';
 import { decryptData } from '@/lib/encryption';
 
 /**
@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
 		}
 
 		// Fetch credentials from database
-		const credentials = await Credential.find(query)
+		const credentials = (await Credential.find(query)
 			.sort({ isPinned: -1, createdAt: -1 }) // Pinned items first, then by creation date
-			.lean();
+			.lean()) as any[];
 
 		// Decrypt sensitive data
 		const decryptedCredentials = credentials.map(credential => ({

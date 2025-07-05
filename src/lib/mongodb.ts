@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 
+declare global {
+	// eslint-disable-next-line no-var
+	var mongoose: { conn: any; promise: any } | undefined;
+}
+
 const MONGODB_URI =
 	process.env.MONGODB_URI || 'mongodb://localhost:27017/password_manager';
 
@@ -20,29 +25,32 @@ if (!cached) {
 	cached = global.mongoose = { conn: null, promise: null };
 }
 
+// Ensure cached is properly typed and not undefined
+const typedCached = cached as { conn: any; promise: any };
+
 async function connectDB() {
-	if (cached.conn) {
-		return cached.conn;
+	if (typedCached.conn) {
+		return typedCached.conn;
 	}
 
-	if (!cached.promise) {
+	if (!typedCached.promise) {
 		const opts = {
 			bufferCommands: false,
 		};
 
-		cached.promise = mongoose.connect(MONGODB_URI, opts).then(mongoose => {
+		typedCached.promise = mongoose.connect(MONGODB_URI, opts).then(mongoose => {
 			return mongoose;
 		});
 	}
 
 	try {
-		cached.conn = await cached.promise;
+		typedCached.conn = await typedCached.promise;
 	} catch (e) {
-		cached.promise = null;
+		typedCached.promise = null;
 		throw e;
 	}
 
-	return cached.conn;
+	return typedCached.conn;
 }
 
 export default connectDB;

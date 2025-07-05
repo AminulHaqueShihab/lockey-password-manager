@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Credential from '@/models/Credential';
+import Credential, { ICredential } from '@/models/Credential';
 import { decryptData, encryptData } from '@/lib/encryption';
 
 /**
@@ -26,7 +26,7 @@ export async function GET(
 		}
 
 		// Find credential by ID
-		const credential = await Credential.findById(id).lean();
+		const credential = (await Credential.findById(id).lean()) as any;
 
 		if (!credential) {
 			return NextResponse.json(
@@ -38,6 +38,7 @@ export async function GET(
 		// Decrypt sensitive data
 		const decryptedCredential = {
 			...credential,
+			_id: credential._id as string,
 			password: decryptData(credential.password),
 			twoFactorSecret: credential.twoFactorSecret
 				? decryptData(credential.twoFactorSecret)
@@ -102,7 +103,7 @@ export async function PUT(
 		}
 
 		// Find existing credential
-		const existingCredential = await Credential.findById(id);
+		const existingCredential = (await Credential.findById(id)) as any;
 
 		if (!existingCredential) {
 			return NextResponse.json(
@@ -118,7 +119,7 @@ export async function PUT(
 			: undefined;
 
 		// Update credential
-		const updatedCredential = await Credential.findByIdAndUpdate(
+		const updatedCredential = (await Credential.findByIdAndUpdate(
 			id,
 			{
 				serviceName,
@@ -132,11 +133,12 @@ export async function PUT(
 				notes,
 			},
 			{ new: true, runValidators: true }
-		).lean();
+		).lean()) as any;
 
 		// Return decrypted data for response
 		const responseData = {
 			...updatedCredential,
+			_id: updatedCredential._id as string,
 			password: password, // Return original password for confirmation
 			twoFactorSecret: twoFactorSecret || undefined,
 		};
@@ -178,7 +180,7 @@ export async function DELETE(
 		}
 
 		// Find and delete credential
-		const deletedCredential = await Credential.findByIdAndDelete(id);
+		const deletedCredential = (await Credential.findByIdAndDelete(id)) as any;
 
 		if (!deletedCredential) {
 			return NextResponse.json(

@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getServiceConfig, getCategoryColor } from '@/lib/services';
 import { useCredential } from '@/hooks/useCredentials';
+import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 
 /**
