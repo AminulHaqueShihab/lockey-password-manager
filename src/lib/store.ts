@@ -82,3 +82,13 @@ import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+// Create a custom logout action that also resets the cache
+export const logoutAndResetCache = () => (dispatch: AppDispatch) => {
+	// Reset RTK Query cache
+	dispatch(credentialsApi.util.resetApiState());
+	dispatch(authApi.util.resetApiState());
+
+	// Logout from auth state
+	dispatch(logout());
+};

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Shield, Moon, Sun, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppSelector, useAppDispatch } from '@/lib/store';
-import { logout } from '@/lib/store';
+import { logoutAndResetCache } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ export default function Navbar({ credentialCount }: NavbarProps) {
 
 	// Handle logout
 	const handleLogout = () => {
-		dispatch(logout());
+		dispatch(logoutAndResetCache());
 		toast.success('Logged out successfully');
 		router.push('/auth');
 	};
