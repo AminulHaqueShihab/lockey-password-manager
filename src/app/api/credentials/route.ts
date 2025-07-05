@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Credential, { ICredential } from '@/models/Credential';
-import { decryptData } from '@/lib/encryption';
+import { decryptData, encryptData } from '@/lib/encryption';
 
 /**
  * GET /api/credentials
@@ -9,13 +9,18 @@ import { decryptData } from '@/lib/encryption';
  */
 export async function GET(request: NextRequest) {
 	try {
+		console.log('GET /api/credentials - Starting request');
+
 		// Connect to MongoDB
 		await connectDB();
+		console.log('GET /api/credentials - Database connected');
 
 		// Get query parameters for filtering
 		const { searchParams } = new URL(request.url);
 		const category = searchParams.get('category');
 		const search = searchParams.get('search');
+
+		console.log('GET /api/credentials - Query params:', { category, search });
 
 		// Build query
 		let query: any = {};
@@ -32,19 +37,29 @@ export async function GET(request: NextRequest) {
 			];
 		}
 
+		console.log('GET /api/credentials - Executing query:', query);
+
 		// Fetch credentials from database
 		const credentials = (await Credential.find(query)
 			.sort({ isPinned: -1, createdAt: -1 }) // Pinned items first, then by creation date
 			.lean()) as any[];
 
+		console.log(
+			'GET /api/credentials - Found credentials:',
+			credentials.length
+		);
+
 		// Decrypt sensitive data
 		const decryptedCredentials = credentials.map(credential => ({
 			...credential,
+			_id: credential._id as string,
 			password: decryptData(credential.password),
 			twoFactorSecret: credential.twoFactorSecret
 				? decryptData(credential.twoFactorSecret)
 				: undefined,
 		}));
+
+		console.log('GET /api/credentials - Returning response');
 
 		return NextResponse.json({
 			success: true,
@@ -54,7 +69,11 @@ export async function GET(request: NextRequest) {
 	} catch (error) {
 		console.error('Error fetching credentials:', error);
 		return NextResponse.json(
-			{ success: false, error: 'Failed to fetch credentials' },
+			{
+				success: false,
+				error: 'Failed to fetch credentials',
+				details: error instanceof Error ? error.message : 'Unknown error',
+			},
 			{ status: 500 }
 		);
 	}
@@ -136,6 +155,3 @@ export async function POST(request: NextRequest) {
 		);
 	}
 }
-
-// Import encryption function
-import { encryptData } from '@/lib/encryption';

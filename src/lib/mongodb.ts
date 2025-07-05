@@ -5,12 +5,11 @@ declare global {
 	var mongoose: { conn: any; promise: any } | undefined;
 }
 
-const MONGODB_URI =
-	process.env.MONGODB_URI || 'mongodb://localhost:27017/password_manager';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
 	throw new Error(
-		'Please define the MONGODB_URI environment variable inside .env.local'
+		'Please define the MONGODB_URI environment variable. Check your Vercel environment variables.'
 	);
 }
 
@@ -36,17 +35,25 @@ async function connectDB() {
 	if (!typedCached.promise) {
 		const opts = {
 			bufferCommands: false,
+			maxPoolSize: 10,
+			serverSelectionTimeoutMS: 5000,
+			socketTimeoutMS: 45000,
 		};
 
-		typedCached.promise = mongoose.connect(MONGODB_URI, opts).then(mongoose => {
-			return mongoose;
-		});
+		console.log('Connecting to MongoDB...');
+		typedCached.promise = mongoose
+			.connect(MONGODB_URI!, opts)
+			.then(mongoose => {
+				console.log('MongoDB connected successfully');
+				return mongoose;
+			});
 	}
 
 	try {
 		typedCached.conn = await typedCached.promise;
 	} catch (e) {
 		typedCached.promise = null;
+		console.error('MongoDB connection error:', e);
 		throw e;
 	}
 
