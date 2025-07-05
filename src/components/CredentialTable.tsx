@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import {
-	Eye,
-	EyeOff,
 	ExternalLink,
 	Edit,
 	Trash2,
@@ -32,14 +30,9 @@ export default function CredentialTable({
 	onTogglePin,
 }: CredentialTableProps) {
 	const [showDetails, setShowDetails] = useState<string | null>(null);
-	const [showPassword, setShowPassword] = useState<string | null>(null);
 
 	const handleLogin = (url: string) => {
 		window.open(url, '_blank');
-	};
-
-	const togglePasswordVisibility = (id: string) => {
-		setShowPassword(showPassword === id ? null : id);
 	};
 
 	const openDetails = (id: string) => {
@@ -137,23 +130,7 @@ export default function CredentialTable({
 								{/* Password */}
 								<td className='p-2'>
 									<div className='flex items-center gap-1'>
-										<span className='text-sm font-mono'>
-											{showPassword === credentialId
-												? credential.password
-												: '••••••••••••••••'}
-										</span>
-										<Button
-											variant='ghost'
-											size='sm'
-											onClick={() => togglePasswordVisibility(credentialId)}
-											className='h-5 w-5 p-0'
-										>
-											{showPassword === credentialId ? (
-												<EyeOff className='h-3 w-3' />
-											) : (
-												<Eye className='h-3 w-3' />
-											)}
-										</Button>
+										<span className='text-sm font-mono'>••••••••••••••••</span>
 										<CopyButton text={credential.password} label='' size='sm' />
 									</div>
 								</td>
