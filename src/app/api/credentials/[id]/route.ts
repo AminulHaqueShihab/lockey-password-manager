@@ -9,14 +9,16 @@ import { decryptData, encryptData } from '@/lib/encryption';
  */
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		// Connect to MongoDB
 		await connectDB();
 
+		const { id } = await params;
+
 		// Validate ID
-		if (!params.id) {
+		if (!id) {
 			return NextResponse.json(
 				{ success: false, error: 'Credential ID is required' },
 				{ status: 400 }
@@ -24,7 +26,7 @@ export async function GET(
 		}
 
 		// Find credential by ID
-		const credential = await Credential.findById(params.id).lean();
+		const credential = await Credential.findById(id).lean();
 
 		if (!credential) {
 			return NextResponse.json(
@@ -61,14 +63,16 @@ export async function GET(
  */
 export async function PUT(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		// Connect to MongoDB
 		await connectDB();
 
+		const { id } = await params;
+
 		// Validate ID
-		if (!params.id) {
+		if (!id) {
 			return NextResponse.json(
 				{ success: false, error: 'Credential ID is required' },
 				{ status: 400 }
@@ -98,7 +102,7 @@ export async function PUT(
 		}
 
 		// Find existing credential
-		const existingCredential = await Credential.findById(params.id);
+		const existingCredential = await Credential.findById(id);
 
 		if (!existingCredential) {
 			return NextResponse.json(
@@ -115,7 +119,7 @@ export async function PUT(
 
 		// Update credential
 		const updatedCredential = await Credential.findByIdAndUpdate(
-			params.id,
+			id,
 			{
 				serviceName,
 				serviceUrl,
@@ -157,14 +161,16 @@ export async function PUT(
  */
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
 	try {
 		// Connect to MongoDB
 		await connectDB();
 
+		const { id } = await params;
+
 		// Validate ID
-		if (!params.id) {
+		if (!id) {
 			return NextResponse.json(
 				{ success: false, error: 'Credential ID is required' },
 				{ status: 400 }
@@ -172,7 +178,7 @@ export async function DELETE(
 		}
 
 		// Find and delete credential
-		const deletedCredential = await Credential.findByIdAndDelete(params.id);
+		const deletedCredential = await Credential.findByIdAndDelete(id);
 
 		if (!deletedCredential) {
 			return NextResponse.json(

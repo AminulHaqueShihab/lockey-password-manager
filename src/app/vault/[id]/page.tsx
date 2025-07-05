@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
 	ArrowLeft,
@@ -13,9 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ICredential } from '@/models/Credential';
 import { getServiceConfig, getCategoryColor } from '@/lib/services';
-import { toast } from 'sonner';
+import { useCredential } from '@/hooks/useCredentials';
 import { Toaster } from '@/components/ui/sonner';
 
 /**
@@ -26,40 +25,19 @@ export default function CredentialDetailPage() {
 	const router = useRouter();
 	const credentialId = params.id as string;
 
-	const [credential, setCredential] = useState<ICredential | null>(null);
-	const [loading, setLoading] = useState(true);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showTwoFactor, setShowTwoFactor] = useState(false);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
 
-	// Load credential data
-	useEffect(() => {
-		const loadCredential = async () => {
-			try {
-				const response = await fetch(`/api/credentials/${credentialId}`);
-				if (!response.ok) {
-					throw new Error('Failed to fetch credential');
-				}
+	// Custom hook for credential operations
+	const { credential, isLoading, error, isDeleting, deleteCredential } =
+		useCredential(credentialId);
 
-				const data = await response.json();
-				if (data.success) {
-					setCredential(data.data);
-				} else {
-					throw new Error(data.error || 'Failed to load credential');
-				}
-			} catch (error) {
-				console.error('Error loading credential:', error);
-				toast.error('Failed to load credential');
-				router.push('/vault');
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		if (credentialId) {
-			loadCredential();
-		}
-	}, [credentialId, router]);
+	// Handle errors from RTK Query
+	if (error) {
+		console.error('Error loading credential:', error);
+		router.push('/vault');
+	}
 
 	// Handle copy to clipboard
 	const handleCopy = async (text: string, field: string) => {
@@ -79,30 +57,9 @@ export default function CredentialDetailPage() {
 
 	// Handle delete
 	const handleDelete = async () => {
-		if (!credential) return;
-
-		if (
-			!confirm(
-				'Are you sure you want to delete this credential? This action cannot be undone.'
-			)
-		) {
-			return;
-		}
-
-		try {
-			const response = await fetch(`/api/credentials/${credential._id}`, {
-				method: 'DELETE',
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete credential');
-			}
-
-			toast.success('Credential deleted successfully!');
+		const success = await deleteCredential();
+		if (success) {
 			router.push('/vault');
-		} catch (error) {
-			console.error('Error deleting credential:', error);
-			toast.error('Failed to delete credential');
 		}
 	};
 
@@ -112,7 +69,7 @@ export default function CredentialDetailPage() {
 	};
 
 	// Loading state
-	if (loading) {
+	if (isLoading) {
 		return (
 			<div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center'>
 				<div className='text-center'>

@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import CredentialList from '@/components/CredentialList';
 import MasterPasswordSetup from '@/components/MasterPasswordSetup';
-import { ICredential } from '@/models/Credential';
 import { validateMasterPassword, isMasterPasswordConfigured } from '@/lib/auth';
+import { useCredentials } from '@/hooks/useCredentials';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -15,33 +15,20 @@ import { Toaster } from '@/components/ui/sonner';
  * Vault page - Main password manager interface
  */
 export default function VaultPage() {
-	const [credentials, setCredentials] = useState<ICredential[]>([]);
-	const [loading, setLoading] = useState(true);
 	const [isUnlocked, setIsUnlocked] = useState(false);
 	const [needsSetup, setNeedsSetup] = useState(false);
 	const [masterPassword, setMasterPassword] = useState('');
 	const [darkMode, setDarkMode] = useState(false);
 
-	// Load credentials from API
-	const loadCredentials = async () => {
-		try {
-			const response = await fetch('/api/credentials');
-			if (!response.ok) {
-				throw new Error('Failed to fetch credentials');
-			}
+	// Custom hook for credential operations
+	const { credentials, isLoading, refetch } = useCredentials(
+		{},
+		{ skip: !isUnlocked }
+	);
 
-			const data = await response.json();
-			if (data.success) {
-				setCredentials(data.data);
-			} else {
-				throw new Error(data.error || 'Failed to load credentials');
-			}
-		} catch (error) {
-			console.error('Error loading credentials:', error);
-			toast.error('Failed to load credentials');
-		} finally {
-			setLoading(false);
-		}
+	// Load credentials using RTK Query
+	const loadCredentials = () => {
+		refetch();
 	};
 
 	// Check if master password is configured
@@ -104,7 +91,8 @@ export default function VaultPage() {
 	// Load credentials when vault is unlocked
 	useEffect(() => {
 		if (isUnlocked) {
-			loadCredentials();
+			// RTK Query will automatically fetch when isUnlocked becomes true
+			// due to the skip condition in useGetCredentialsQuery
 		}
 	}, [isUnlocked]);
 
@@ -120,7 +108,7 @@ export default function VaultPage() {
 	}
 
 	// Loading state
-	if (loading && isUnlocked) {
+	if (isLoading && isUnlocked) {
 		return (
 			<div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center'>
 				<div className='text-center'>
@@ -251,7 +239,7 @@ export default function VaultPage() {
 
 			{/* Main content */}
 			<main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-				<CredentialList credentials={credentials} onRefresh={loadCredentials} />
+				<CredentialList />
 			</main>
 		</div>
 	);

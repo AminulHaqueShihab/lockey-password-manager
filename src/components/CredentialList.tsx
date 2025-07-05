@@ -9,11 +9,9 @@ import CredentialCard from './CredentialCard';
 import AddCredentialForm from './AddCredentialForm';
 import { ICredential } from '@/models/Credential';
 import { getCategories, getCategoryColor } from '@/lib/services';
-import { toast } from 'sonner';
+import { useCredentials } from '@/hooks/useCredentials';
 
 interface CredentialListProps {
-	credentials: ICredential[];
-	onRefresh: () => void;
 	className?: string;
 }
 
@@ -22,8 +20,6 @@ interface CredentialListProps {
  * search, and management capabilities
  */
 export default function CredentialList({
-	credentials,
-	onRefresh,
 	className = '',
 }: CredentialListProps) {
 	const [searchTerm, setSearchTerm] = useState('');
@@ -32,50 +28,38 @@ export default function CredentialList({
 	const [showAddForm, setShowAddForm] = useState(false);
 	const [editingCredential, setEditingCredential] =
 		useState<ICredential | null>(null);
-	const [loading, setLoading] = useState(false);
+
+	// Custom hook for credential operations
+	const {
+		credentials,
+		isLoading,
+		isCreating,
+		isUpdating,
+		isDeleting,
+		isTogglingPin,
+		createCredential,
+		updateCredential,
+		deleteCredential,
+		togglePin,
+	} = useCredentials({
+		category: selectedCategory !== 'all' ? selectedCategory : undefined,
+		search: searchTerm || undefined,
+	});
+
+	const loading = isCreating || isUpdating || isDeleting || isTogglingPin;
 
 	const categories = getCategories();
 
-	// Filter credentials based on search and category
-	const filteredCredentials = credentials.filter(credential => {
-		const matchesSearch =
-			searchTerm === '' ||
-			credential.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			credential.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			credential.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-		const matchesCategory =
-			selectedCategory === 'all' || credential.category === selectedCategory;
-
-		return matchesSearch && matchesCategory;
-	});
+	// RTK Query handles filtering automatically through the query parameters
+	const filteredCredentials = credentials;
 
 	// Handle credential creation
 	const handleCreateCredential = async (
 		credentialData: Partial<ICredential>
 	) => {
-		setLoading(true);
-		try {
-			const response = await fetch('/api/credentials', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(credentialData),
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to create credential');
-			}
-
-			toast.success('Credential created successfully!');
+		const success = await createCredential(credentialData);
+		if (success) {
 			setShowAddForm(false);
-			onRefresh();
-		} catch (error) {
-			console.error('Error creating credential:', error);
-			toast.error('Failed to create credential');
-		} finally {
-			setLoading(false);
 		}
 	};
 
@@ -85,87 +69,23 @@ export default function CredentialList({
 	) => {
 		if (!editingCredential) return;
 
-		setLoading(true);
-		try {
-			const response = await fetch(
-				`/api/credentials/${editingCredential._id}`,
-				{
-					method: 'PUT',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(credentialData),
-				}
-			);
-
-			if (!response.ok) {
-				throw new Error('Failed to update credential');
-			}
-
-			toast.success('Credential updated successfully!');
+		const success = await updateCredential(
+			editingCredential._id,
+			credentialData
+		);
+		if (success) {
 			setEditingCredential(null);
-			onRefresh();
-		} catch (error) {
-			console.error('Error updating credential:', error);
-			toast.error('Failed to update credential');
-		} finally {
-			setLoading(false);
 		}
 	};
 
 	// Handle credential deletion
 	const handleDeleteCredential = async (id: string) => {
-		if (
-			!confirm(
-				'Are you sure you want to delete this credential? This action cannot be undone.'
-			)
-		) {
-			return;
-		}
-
-		try {
-			const response = await fetch(`/api/credentials/${id}`, {
-				method: 'DELETE',
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete credential');
-			}
-
-			toast.success('Credential deleted successfully!');
-			onRefresh();
-		} catch (error) {
-			console.error('Error deleting credential:', error);
-			toast.error('Failed to delete credential');
-		}
+		await deleteCredential(id);
 	};
 
 	// Handle pin toggle
 	const handleTogglePin = async (id: string, isPinned: boolean) => {
-		try {
-			const credential = credentials.find(c => c._id === id);
-			if (!credential) return;
-
-			const response = await fetch(`/api/credentials/${id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					...credential,
-					isPinned,
-				}),
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to update credential');
-			}
-
-			onRefresh();
-		} catch (error) {
-			console.error('Error toggling pin:', error);
-			toast.error('Failed to update credential');
-		}
+		await togglePin(id, isPinned);
 	};
 
 	// Handle edit
