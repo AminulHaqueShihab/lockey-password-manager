@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: 'Lockey- Password Manager',
+	title: 'Lockey | Password Manager',
 	description:
 		'A secure, cross-platform password manager with AES encryption. Lockey is a password manager that allows you to store your passwords in a secure and encrypted way.',
 	keywords: ['password manager', 'security', 'encryption', 'vault', 'lockey'],
