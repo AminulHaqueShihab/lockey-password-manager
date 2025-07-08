@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import Providers from '@/components/Providers';
+import AutoLogoutProvider from '@/components/AutoLogoutProvider';
 
 const geist = Geist({
 	variable: '--font-geist-sans',
@@ -35,8 +36,10 @@ export default function RootLayout({
 		<html lang='en' className='dark'>
 			<body className={`${geist.variable} ${geistMono.variable} antialiased`}>
 				<Providers>
-					{children}
-					<Toaster />
+					<AutoLogoutProvider>
+						{children}
+						<Toaster />
+					</AutoLogoutProvider>
 				</Providers>
 			</body>
 		</html>
